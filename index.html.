@@ -1,0 +1,249 @@
+```html
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vòng Quay May Mắn Lớp Học</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            margin: 0;
+            color: white;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            margin: 20px 0;
+        }
+
+        /* Mũi tên chỉ hướng ở đỉnh */
+        .pointer {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 18px solid transparent;
+            border-right: 18px solid transparent;
+            border-top: 35px solid #ff4757;
+            z-index: 10;
+            filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.4));
+        }
+
+        /* Vòng quay */
+        #wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 6px solid #fff;
+            background-color: #fff;
+            transition: transform 5s cubic-bezier(0.1, 0.8, 0.2, 1);
+        }
+
+        /* Nút quay */
+        button {
+            padding: 15px 50px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #fff;
+            background: linear-gradient(135deg, #ff4757, #ff6b81);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+            transition: 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 71, 87, 0.6);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            background: #a4b0be;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Kết quả hiển thị */
+        #result {
+            margin-top: 25px;
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            min-height: 40px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+            color: #51ff00;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>VÒNG QUAY MAY MẮN</h1>
+
+    <div class="wheel-container">
+        <div class="pointer"></div>
+        <canvas id="wheel" width="500" height="500"></canvas>
+    </div>
+
+    <button id="spinBtn">QUAY NGAY</button>
+    <div id="result"></div>
+
+    <script>
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
+        const resultDiv = document.getElementById('result');
+
+        // Danh sách 42 thành viên
+        const participants = [
+            { name: "Lê Quỳnh Anh", weight: 20 },
+            { name: "Nguyễn Danh Đức Anh", weight: 20 },
+            { name: "Trần Tuấn Anh", weight: 20 },
+            { name: "Trần Duy Bách", weight: 200 },
+            { name: "Vũ Nguyên Gia Bảo", weight: 200 },
+            { name: "Nguyễn Đoàn Ngọc Bích", weight: 200 },
+            { name: "Đặng Thái Bình", weight: 200 },
+            { name: "Tạ Mạnh Dũng", weight: 20 },
+            { name: "Trần Như Dũng", weight: 20 },
+            { name: "Nguyễn Phúc Minh Đăng", weight: 20 },
+            { name: "Vũ Xuân Đức", weight: 20 },
+            { name: "Đinh Hương Giang", weight: 20 },
+            { name: "Nguyễn Huy Hoàng", weight: 20 },
+            { name: "Vũ Văn Hoành", weight: 20 },
+            { name: "Mạc Gia Huy", weight: 20 },
+            { name: "Nguyễn Anh Huy", weight: 20 },
+            { name: "Nguyễn Đặng Gia Huy", weight: 20 },
+            { name: "Nguyễn Khắc Gia Huy", weight: 20 },
+            { name: "Trần Thu Hương", weight: 20 },
+            { name: "Nguyễn Dũng Nam Khánh", weight: 200 },
+            { name: "Nguyễn Ngọc Nam Khánh", weight: 200 },
+            { name: "Đỗ Hoàng Kiệt", weight: 200 },
+            { name: "Trần Tuấn Kiệt", weight: 200 },
+            { name: "Phạm Hoàng Linh", weight: 200 },
+            { name: "Nguyễn Bá Quang Long", weight: 200 },
+            { name: "Nguyễn Đức Lộc", weight: 200 },
+            { name: "Phạm Thu Lương", weight: 200 },
+            { name: "Mai Nhật Minh", weight: 20 },
+            { name: "Nguyễn Thu Minh", weight: 20 },
+            { name: "Phạm Tiến Minh", weight: 20 },
+            { name: "Nguyễn Đức Nguyên", weight: 20 },
+            { name: "Nguyễn Thị Thanh Nhàn", weight: 20 },
+            { name: "Vũ Dương Yến Nhi", weight: 20 },
+            { name: "Đào Thế Phong", weight: 20 },
+            { name: "Nguyễn Hoàng Phong", weight: 20 },
+            { name: "Trần Thị Hà Phương", weight: 20 },
+            { name: "Nguyễn Anh Quân", weight: 20 },
+            { name: "Đinh Thị Minh Tâm", weight: 20 },
+            { name: "Phạm Việt Thái", weight: 20 },
+            { name: "Lưu Minh Trí", weight: 20 },
+            { name: "Lê Xuân Tú", weight: 20 },
+            { name: "Trần Lan Tường", weight: 20 }
+        ];
+
+        const colors = ['#ff6b6b', '#4fa8ff', '#1dd1a1', '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd', '#ff7f50'];
+        const numSegments = participants.length;
+        const arcSize = (2 * Math.PI) / numSegments;
+
+        function drawWheel() {
+            for (let i = 0; i < numSegments; i++) {
+                ctx.beginPath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.moveTo(250, 250);
+                ctx.arc(250, 250, 250, i * arcSize, (i + 1) * arcSize);
+                ctx.lineTo(250, 250);
+                ctx.fill();
+
+                ctx.save();
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 9px Arial';
+                ctx.translate(250, 250);
+                ctx.rotate(i * arcSize + arcSize / 2);
+                ctx.textAlign = 'right';
+                ctx.fillText(participants[i].name, 235, 3);
+                ctx.restore();
+            }
+        }
+
+        drawWheel();
+
+        let currentRotation = 0;
+        let isSpinning = false;
+        let spinCount = 0; // BIẾN ĐẾM SỐ LẦN QUAY
+
+        spinBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            isSpinning = true;
+            spinBtn.disabled = true;
+            resultDiv.innerText = '';
+
+            spinCount++; // Mỗi lần bấm nút sẽ tăng số lần quay lên 1
+
+            let winnerIndex = 0;
+
+            // THUẬT TOÁN ĐIỀU KHIỂN KẾT QUẢ THEO Ý MUỐN
+            if (spinCount === 2) {
+                // Lần quay thứ 2: Ép buộc trúng Đặng Thái Bình
+                winnerIndex = participants.findIndex(p => p.name.includes("Đặng Thái Bình"));
+            } else if (spinCount === 3) {
+                // Lần quay thứ 3: Ép buộc trúng Trần Tuấn Kiệt
+                winnerIndex = participants.findIndex(p => p.name.includes("Trần Tuấn Kiệt"));
+            } else {
+                // Các lần còn lại (Lần 1, và từ lần 4 trở đi): Ngẫu nhiên theo tỉ lệ weight cài đặt sẵn
+                let totalWeight = participants.reduce((sum, p) => sum + p.weight, 0);
+                let random = Math.random() * totalWeight;
+                
+                for (let i = 0; i < participants.length; i++) {
+                    random -= participants[i].weight;
+                    if (random <= 0) {
+                        winnerIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            // Tính toán góc quay để kim dừng chính xác vào ô người thắng
+            const segmentDeg = 360 / numSegments;
+            const targetDeg = 270 - (winnerIndex * segmentDeg + segmentDeg / 2);
+            
+            let finalTarget = targetDeg % 360;
+            if (finalTarget < 0) finalTarget += 360;
+
+            let currentBase = currentRotation % 360;
+            let amountToRotate = finalTarget - currentBase;
+            if (amountToRotate <= 0) amountToRotate += 360;
+
+            currentRotation += amountToRotate + (6 * 360);
+            canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                spinBtn.disabled = false;
+                resultDiv.innerHTML = `🎉 Chúc mừng: <br>${participants[winnerIndex].name} 🎉`;
+            }, 5000);
+        });
+    </script>
+</body>
